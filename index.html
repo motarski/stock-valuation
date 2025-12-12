@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Motarski Stock Valuation</title>
+
+    <!-- External Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Sora:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Stylesheet -->
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="grain"></div>
+
+    <div class="container">
+        <div class="header">
+            <h1>Motarski Stock Valuation</h1>
+            <p>Automated fundamental analysis with real-time data</p>
+        </div>
+
+        <div class="card">
+            <h2>Step 1: Fetch Company Data</h2>
+
+            <div class="ticker-section">
+                <div class="ticker-input-group">
+                    <label style="font-weight: 600; margin-bottom: 8px; color: var(--text-secondary);">Stock Ticker Symbol</label>
+                    <input type="text" id="tickerSymbol" placeholder="e.g., AAPL, KAMBI.ST, TSLA" style="width: 100%; padding: 14px 18px; border: 2px solid var(--border-color); border-radius: 12px; font-size: 1em; background: var(--bg-secondary); color: var(--text-primary); font-family: 'Space Mono', monospace;">
+                    <small style="display: block; margin-top: 8px;">For Kambi, use: KAMBI.ST (Stockholm) or check your exchange suffix</small>
+                </div>
+                <button class="btn btn-fetch" onclick="fetchStockData()">🔍 Fetch Data</button>
+            </div>
+
+            <div id="loadingMessage" class="loading">Fetching stock data</div>
+            <div id="errorMessage" class="error-message"></div>
+            <div id="successMessage" class="success-message"></div>
+
+            <div id="companyInfoSection" style="display: none;">
+                <div class="company-info">
+                    <h3>📊 Company Information</h3>
+                    <div class="company-info-grid" id="companyInfoGrid"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Step 2: Review & Adjust Parameters</h2>
+
+            <div class="input-section">
+                <div class="input-group">
+                    <label>Company Name</label>
+                    <input type="text" id="companyName" placeholder="Auto-filled from API">
+                </div>
+
+                <div class="input-group">
+                    <label>Current Stock Price ($)</label>
+                    <input type="number" id="stockPrice" step="0.01" placeholder="Auto-filled">
+                </div>
+
+                <div class="input-group">
+                    <label>
+                        Earnings Per Share - EPS ($)
+                        <span class="tooltip" data-tooltip="Net income divided by shares outstanding. Shows how much profit each share generates. Higher is better.">?</span>
+                    </label>
+                    <input type="number" id="eps" step="0.01" placeholder="Auto-filled">
+                </div>
+
+                <div class="input-group">
+                    <label>
+                        Book Value Per Share ($)
+                        <span class="tooltip" data-tooltip="Total assets minus total liabilities, divided by shares. Represents the accounting value of each share if the company liquidated today.">?</span>
+                    </label>
+                    <input type="number" id="bookValue" step="0.01" placeholder="Auto-filled">
+                </div>
+
+                <div class="input-group">
+                    <label>
+                        Expected Growth Rate (%)
+                        <span class="tooltip" data-tooltip="Your estimate of annual earnings growth. Check analyst estimates or historical growth rates. Gaming/betting companies typically grow 10-20% annually.">?</span>
+                    </label>
+                    <input type="number" id="growthRate" step="0.1" placeholder="e.g., 15">
+                </div>
+
+                <div class="input-group">
+                    <label>
+                        Required Rate of Return (%)
+                        <span class="tooltip" data-tooltip="Your minimum acceptable return. Typically 8-12% for stocks. Higher for riskier investments. This is YOUR hurdle rate.">?</span>
+                    </label>
+                    <input type="number" id="requiredReturn" step="0.1" value="10" placeholder="e.g., 10">
+                </div>
+
+                <div class="input-group">
+                    <label>Sector</label>
+                    <select id="sector">
+                        <option value="">Select Sector</option>
+                        <option value="technology">Technology</option>
+                        <option value="healthcare">Healthcare</option>
+                        <option value="finance">Financial Services</option>
+                        <option value="consumer">Consumer Discretionary</option>
+                        <option value="industrial">Industrial</option>
+                        <option value="energy">Energy</option>
+                        <option value="utilities">Utilities</option>
+                        <option value="realestate">Real Estate</option>
+                        <option value="materials">Materials</option>
+                        <option value="telecom">Telecommunications</option>
+                        <option value="gaming">Gaming & Betting</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label>
+                        Free Cash Flow Per Share ($)
+                        <span class="tooltip" data-tooltip="Operating cash flow minus capital expenditures, divided by shares. Shows actual cash generation ability. Critical for DCF valuation.">?</span>
+                    </label>
+                    <input type="number" id="fcf" step="0.01" placeholder="Auto-filled if available">
+                </div>
+            </div>
+
+            <button class="btn btn-analyze" onclick="analyzeStock()">📊 Analyze Stonk</button>
+        </div>
+
+        <div id="results" class="results">
+            <div class="card">
+                <h2>Valuation Metrics</h2>
+
+                <div class="metric-grid">
+                    <div class="metric-card">
+                        <h3>Current P/E Ratio</h3>
+                        <div class="value" id="peRatio">-</div>
+                        <div class="subtext" id="peComparison">-</div>
+                    </div>
+
+                    <div class="metric-card">
+                        <h3>Intrinsic Value (DDM)</h3>
+                        <div class="value" id="intrinsicValue">-</div>
+                        <div class="subtext" id="valueGap">-</div>
+                    </div>
+
+                    <div class="metric-card">
+                        <h3>DCF Valuation</h3>
+                        <div class="value" id="dcfValue">-</div>
+                        <div class="subtext">Discounted Cash Flow</div>
+                    </div>
+
+                    <div class="metric-card">
+                        <h3>Price to Book</h3>
+                        <div class="value" id="pbRatio">-</div>
+                        <div class="subtext">P/B Ratio</div>
+                    </div>
+                </div>
+
+                <div class="analysis-section">
+                    <h2>Detailed Analysis</h2>
+
+                    <div class="valuation-box">
+                        <h3>📊 P/E Ratio Analysis</h3>
+                        <p id="peAnalysis"></p>
+                    </div>
+
+                    <div class="valuation-box">
+                        <h3>💰 Intrinsic Value Analysis</h3>
+                        <p id="intrinsicAnalysis"></p>
+                    </div>
+
+                    <div class="valuation-box">
+                        <h3>📈 Growth Projections</h3>
+                        <ul class="details-list" id="growthProjections"></ul>
+                    </div>
+
+                    <div class="valuation-box">
+                        <h3>🎯 Sector Comparison</h3>
+                        <p id="sectorAnalysis"></p>
+                    </div>
+                </div>
+
+                <div id="recommendation" class="recommendation"></div>
+
+                <div class="info-box">
+                    <p><strong>Disclaimer:</strong> This analysis is for educational purposes only and should not be considered financial advice. Data is fetched from public APIs and may have delays. Always conduct thorough research and consult with a qualified financial advisor before making investment decisions.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Configuration (loads API endpoints based on environment) -->
+    <script src="js/config.js"></script>
+
+    <!-- Main Application Logic -->
+    <script src="js/app.js"></script>
+</body>
+</html>
