@@ -1,15 +1,18 @@
-# Stock Valuation App - Modular Architecture
+# Smart Stock Recommender
 
-A modern stock analysis tool that fetches real-time data and performs fundamental analysis using multiple valuation methods. Features a **modular architecture** for easy development and deployment.
+A simple, powerful stock recommendation engine that combines **fundamental analysis**, **technical indicators**, and **market sentiment** to give you actionable buy/sell/hold recommendations.
 
 ## Features
 
-- Real-time stock data fetching via yfinance API
-- Multiple valuation methods: P/E ratio, DDM, DCF, P/B ratio
-- Sector-based comparative analysis
-- Buy/Hold/Sell recommendations
-- Modern cyberpunk-styled UI with animations
-- **Modular design**: Separate CSS, JS, and configuration files
+- **Three-Pillar Analysis**:
+  - 📊 **Fundamentals**: P/E ratio, growth metrics, 52-week position
+  - 📈 **Technical Analysis**: RSI, MACD, Moving Averages, Bollinger Bands
+  - 😨 **Market Sentiment**: Fear & Greed Index based on VIX
+
+- **Real-time Data**: Fetches live stock data and technical indicators
+- **Simple Scoring**: 0-15 point system for easy decision making
+- **Action Plans**: Entry price, stop loss, and target recommendations
+- **Clean UI**: Modern, cyberpunk-styled interface
 
 ## Project Structure
 
@@ -74,9 +77,11 @@ python3 -m http.server 8000
 # Install once (requires Node.js/npm)
 npm install -g http-server
 
-# Then run in a NEW terminal window
-cd /Users/motarski/git_projects/stock-valuation
-http-server -p 8000
+# Then run in a NEW terminal window using the startup script (disables caching)
+./start_web_server.sh
+
+# Or manually:
+http-server -p 8000 -c-1 --cors
 ```
 
 ### 4. Open the Web App
