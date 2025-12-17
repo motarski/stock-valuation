@@ -58,15 +58,36 @@ python3 stock_api_server.py
 
 The server will start on `http://localhost:5001`
 
-### 3. Open the Web App
+### 3. Start the Web Development Server
 
-Simply open `index.html` in your web browser:
+To properly develop the frontend, you need to serve it via HTTP (not just opening the HTML file).
 
+**Option A - Using Python's built-in server:**
 ```bash
-open index.html
+# In a NEW terminal window (keep the API server running)
+cd /Users/motarski/git_projects/stock-valuation
+python3 -m http.server 8000
 ```
 
+**Option B - Using http-server (recommended for better development experience):**
+```bash
+# Install once (requires Node.js/npm)
+npm install -g http-server
+
+# Then run in a NEW terminal window
+cd /Users/motarski/git_projects/stock-valuation
+http-server -p 8000
+```
+
+### 4. Open the Web App
+
+Open your browser to: **http://localhost:8000**
+
 The app will **auto-detect** that you're running locally and use `http://localhost:5001` for API calls.
+
+**Note:** You should have **two servers running**:
+- API Server on port 5001 (`stock_api_server.py`)
+- Web Server on port 8000 (serving the frontend files)
 
 ## Deployment to Production
 
@@ -178,20 +199,26 @@ All business logic is in `js/app.js`:
 
 ### Typical Development Workflow
 
-1. **Make changes locally:**
+1. **Start local development environment:**
    ```bash
-   # Start local server
+   # Terminal 1: Start API server
    ./start_server.sh
 
+   # Terminal 2: Start web server
+   http-server -p 8000
+   # OR: python3 -m http.server 8000
+   ```
+
+2. **Make changes locally:**
+   ```bash
    # Edit files:
    # - css/styles.css (for design changes)
    # - js/app.js (for logic changes)
    # - index.html (for structure changes)
-
-   # Test in browser at file:///path/to/index.html
    ```
 
-2. **Test your changes:**
+3. **Test your changes:**
+   - Open browser to `http://localhost:8000`
    - API calls automatically go to `localhost:5001`
    - All styling and logic changes are reflected immediately
    - Refresh browser to see updates
