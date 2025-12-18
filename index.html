@@ -19,10 +19,16 @@
         <!-- Google-style centered search layout -->
         <div style="min-height: 50vh; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 40px 20px;">
 
-            <!-- Logo/Title -->
-            <h1 style="font-size: 4em; font-weight: 700; margin-bottom: 40px; text-align: center; background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
-                Verdict
-            </h1>
+            <!-- Market Sentiment Card -->
+            <div id="marketSentimentCard" style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; width: 100%; max-width: 350px; margin-bottom: 40px;">
+                <h3 style="font-size: 1em; margin: 0 0 16px 0; text-align: center; opacity: 0.8;">Market Sentiment</h3>
+                <div id="fearGreedDisplay" style="text-align: center;">
+                    <div style="display: none;" id="sentimentEmoji">📊</div>
+                    <div style="font-size: 1.4em; font-weight: bold; margin-bottom: 8px;" id="sentimentRating">Loading...</div>
+                    <div style="font-size: 0.95em; opacity: 0.8;" id="sentimentScore">Fetching...</div>
+                    <div style="margin-top: 10px; font-size: 0.75em; opacity: 0.5;" id="sentimentSource"></div>
+                </div>
+            </div>
 
             <!-- Centered Search Box -->
             <div style="width: 100%; max-width: 600px;">
@@ -31,22 +37,11 @@
                 </div>
 
                 <div style="display: flex; justify-content: center; gap: 15px; margin-bottom: 30px;">
-                    <button class="btn btn-fetch" onclick="analyzeStock()" style="padding: 12px 30px; border-radius: 20px;">Analyze Stock</button>
+                    <button class="btn btn-fetch" onclick="analyzeStock()" style="padding: 12px 30px; border-radius: 20px;">Verdict</button>
                 </div>
 
                 <div id="loadingMessage" class="loading">Analyzing stock...</div>
                 <div id="errorMessage" class="error-message"></div>
-            </div>
-
-            <!-- Market Sentiment Box Below Search -->
-            <div id="marketSentimentCard" style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 12px; padding: 16px; width: 100%; max-width: 300px; margin-top: 30px;">
-                <h3 style="font-size: 0.9em; margin: 0 0 12px 0; text-align: center; opacity: 0.8;">Market Sentiment</h3>
-                <div id="fearGreedDisplay" style="text-align: center;">
-                    <div style="display: none;" id="sentimentEmoji">📊</div>
-                    <div style="font-size: 1.2em; font-weight: bold; margin-bottom: 6px;" id="sentimentRating">Loading...</div>
-                    <div style="font-size: 0.85em; opacity: 0.8;" id="sentimentScore">Fetching...</div>
-                    <div style="margin-top: 8px; font-size: 0.7em; opacity: 0.5;" id="sentimentSource"></div>
-                </div>
             </div>
         </div>
 
