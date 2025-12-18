@@ -337,33 +337,85 @@ def detect_elliott_waves(prices):
 
 @app.route('/api/search/<query>', methods=['GET'])
 def search_ticker(query):
-    """Search for ticker symbols by company name."""
+    """Search for ticker symbols by company name using multiple methods."""
     try:
-        # Use yfinance Ticker search (basic implementation)
-        # For production, use a proper ticker search API
-        ticker = yf.Ticker(query)
-        info = ticker.info
-        
-        if info and 'symbol' in info:
+        results = []
+
+        # Method 1: Try Yahoo Finance API first (with user-agent to avoid rate limiting)
+        try:
+            yahoo_url = f'https://query1.finance.yahoo.com/v1/finance/search?q={query}&quotesCount=8&newsCount=0'
+            headers = {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+            }
+            response = requests.get(yahoo_url, headers=headers, timeout=3)
+
+            if response.status_code == 200:
+                data = response.json()
+                quotes = data.get('quotes', [])
+
+                for quote in quotes:
+                    results.append({
+                        'symbol': quote.get('symbol', ''),
+                        'shortname': quote.get('shortname', ''),
+                        'longname': quote.get('longname', ''),
+                        'exchange': quote.get('exchange', quote.get('exchDisp', '')),
+                        'quoteType': quote.get('quoteType', ''),
+                        'score': quote.get('score', 0)
+                    })
+
+                if results:
+                    return jsonify({
+                        'success': True,
+                        'quotes': results
+                    })
+        except Exception as e:
+            print(f"Yahoo API failed: {str(e)}")
+
+        # Method 2: Fallback - Try to validate if it's a valid ticker
+        # Convert query to uppercase and try as ticker
+        potential_ticker = query.upper().strip()
+
+        # Try the query as a direct ticker symbol
+        try:
+            stock = yf.Ticker(potential_ticker)
+            info = stock.info
+
+            # Check if we got valid data
+            symbol = info.get('symbol', potential_ticker)
+            long_name = info.get('longName', '')
+
+            if long_name and symbol:
+                results.append({
+                    'symbol': symbol,
+                    'shortname': info.get('shortName', long_name[:50]),
+                    'longname': long_name,
+                    'exchange': info.get('exchange', ''),
+                    'quoteType': info.get('quoteType', 'EQUITY'),
+                    'score': 100
+                })
+        except Exception as e:
+            print(f"Direct ticker lookup failed: {str(e)}")
+
+        if results:
             return jsonify({
                 'success': True,
-                'results': [{
-                    'symbol': info.get('symbol', query),
-                    'name': info.get('longName', query),
-                    'exchange': info.get('exchange', '')
-                }]
+                'quotes': results
             })
         else:
             return jsonify({
                 'success': False,
-                'message': 'No results found'
-            }), 404
-            
+                'message': 'No results found',
+                'quotes': []
+            })
+
     except Exception as e:
+        print(f"Search error: {str(e)}")
         return jsonify({
             'success': False,
-            'error': str(e)
-        }), 400
+            'error': 'Search failed',
+            'message': str(e),
+            'quotes': []
+        }), 500
 
 @app.route('/api/fear-greed', methods=['GET'])
 def get_fear_greed():

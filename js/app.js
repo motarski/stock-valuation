@@ -7,6 +7,9 @@ let stockData = null;
 let technicalData = null;
 let sentimentData = null;
 let tradingViewWidget = null;
+let autocompleteTimeout = null;
+let selectedAutocompleteIndex = -1;
+let autocompleteResults = [];
 
 // Fetch market sentiment on page load
 window.addEventListener('DOMContentLoaded', () => {
@@ -16,8 +19,44 @@ window.addEventListener('DOMContentLoaded', () => {
     const tickerInput = document.getElementById('tickerSymbol');
     tickerInput.addEventListener('keypress', (event) => {
         if (event.key === 'Enter') {
-            event.preventDefault(); // Prevent form submission if in a form
-            analyzeStock();
+            event.preventDefault();
+            // If dropdown is visible and item is selected, use it
+            const dropdown = document.getElementById('autocompleteDropdown');
+            if (dropdown.style.display !== 'none' && selectedAutocompleteIndex >= 0) {
+                selectAutocompleteItem(autocompleteResults[selectedAutocompleteIndex]);
+            } else {
+                analyzeStock();
+            }
+        }
+    });
+
+    // Add autocomplete input listener
+    tickerInput.addEventListener('input', (event) => {
+        handleAutocompleteInput(event.target.value);
+    });
+
+    // Add keyboard navigation for autocomplete
+    tickerInput.addEventListener('keydown', (event) => {
+        const dropdown = document.getElementById('autocompleteDropdown');
+        if (dropdown.style.display === 'none') return;
+
+        if (event.key === 'ArrowDown') {
+            event.preventDefault();
+            selectedAutocompleteIndex = Math.min(selectedAutocompleteIndex + 1, autocompleteResults.length - 1);
+            highlightAutocompleteItem();
+        } else if (event.key === 'ArrowUp') {
+            event.preventDefault();
+            selectedAutocompleteIndex = Math.max(selectedAutocompleteIndex - 1, -1);
+            highlightAutocompleteItem();
+        } else if (event.key === 'Escape') {
+            hideAutocomplete();
+        }
+    });
+
+    // Click outside to close dropdown
+    document.addEventListener('click', (event) => {
+        if (!event.target.closest('.ticker-input-group')) {
+            hideAutocomplete();
         }
     });
 
@@ -753,4 +792,101 @@ function hideMessages() {
 function hideResults() {
     document.getElementById('results').style.display = 'none';
     document.getElementById('errorResults').style.display = 'none';
+}
+
+/**
+ * Autocomplete Functions
+ */
+function handleAutocompleteInput(query) {
+    clearTimeout(autocompleteTimeout);
+
+    if (query.length < 2) {
+        hideAutocomplete();
+        return;
+    }
+
+    // Debounce the API call
+    autocompleteTimeout = setTimeout(() => {
+        fetchAutocompleteResults(query);
+    }, 300);
+}
+
+async function fetchAutocompleteResults(query) {
+    const dropdown = document.getElementById('autocompleteDropdown');
+
+    // Show loading state
+    dropdown.innerHTML = '<div class="autocomplete-loading"><i class="fa-solid fa-spinner fa-spin"></i> Searching...</div>';
+    dropdown.style.display = 'block';
+
+    try {
+        // Use backend API (works in both dev and prod)
+        const url = API_CONFIG.getAutocompleteUrl(query);
+
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json'
+            }
+        });
+
+        const data = await response.json();
+
+        if (data.success && data.quotes && data.quotes.length > 0) {
+            autocompleteResults = data.quotes;
+            displayAutocompleteResults(data.quotes);
+        } else {
+            dropdown.innerHTML = '<div class="autocomplete-no-results"><i class="fa-solid fa-circle-xmark"></i> No results found</div>';
+        }
+    } catch (error) {
+        console.error('Autocomplete error:', error);
+        dropdown.innerHTML = '<div class="autocomplete-no-results"><i class="fa-solid fa-triangle-exclamation"></i> Search unavailable</div>';
+    }
+}
+
+function displayAutocompleteResults(results) {
+    const dropdown = document.getElementById('autocompleteDropdown');
+    selectedAutocompleteIndex = -1;
+
+    dropdown.innerHTML = results.map((result, index) => {
+        const symbol = result.symbol || '';
+        const name = result.shortname || result.longname || '';
+        const exchange = result.exchange || result.exchDisp || '';
+        const type = result.quoteType || '';
+
+        return `
+            <div class="autocomplete-item" data-index="${index}" onclick="selectAutocompleteItem(autocompleteResults[${index}])">
+                <span class="ticker-symbol">${symbol}</span>
+                <span class="company-name">${name}</span>
+                <span class="exchange-type">${exchange} • ${type}</span>
+            </div>
+        `;
+    }).join('');
+
+    dropdown.style.display = 'block';
+}
+
+function selectAutocompleteItem(result) {
+    const tickerInput = document.getElementById('tickerSymbol');
+    tickerInput.value = result.symbol;
+    hideAutocomplete();
+    analyzeStock();
+}
+
+function highlightAutocompleteItem() {
+    const items = document.querySelectorAll('.autocomplete-item');
+    items.forEach((item, index) => {
+        if (index === selectedAutocompleteIndex) {
+            item.classList.add('selected');
+            item.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        } else {
+            item.classList.remove('selected');
+        }
+    });
+}
+
+function hideAutocomplete() {
+    const dropdown = document.getElementById('autocompleteDropdown');
+    dropdown.style.display = 'none';
+    selectedAutocompleteIndex = -1;
+    autocompleteResults = [];
 }

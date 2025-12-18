@@ -48,6 +48,11 @@ const API_CONFIG = {
         return `${config.baseUrl}${config.search}/${encodeURIComponent(query)}`;
     },
 
+    getAutocompleteUrl(query) {
+        const config = this.current;
+        return `${config.baseUrl}${config.search}/${encodeURIComponent(query)}`;
+    },
+
     getHealthUrl() {
         const config = this.current;
         return `${config.baseUrl}${config.health}`;
