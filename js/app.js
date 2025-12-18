@@ -10,6 +10,31 @@ let sentimentData = null;
 // Fetch market sentiment on page load
 window.addEventListener('DOMContentLoaded', () => {
     fetchMarketSentiment();
+
+    // Add Enter key listener to ticker input
+    const tickerInput = document.getElementById('tickerSymbol');
+    tickerInput.addEventListener('keypress', (event) => {
+        if (event.key === 'Enter') {
+            event.preventDefault(); // Prevent form submission if in a form
+            analyzeStock();
+        }
+    });
+
+    // Add global ESC key listener for resetting to search
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' || event.key === 'Esc') {
+            const resultsDiv = document.getElementById('results');
+            const errorDiv = document.getElementById('errorResults');
+
+            // If either results or error page is showing, hide them and focus input
+            if (resultsDiv.style.display === 'block' || errorDiv.style.display === 'block') {
+                hideResults();
+                document.getElementById('tickerSymbol').focus();
+                // Select all text in input for easy replacement
+                document.getElementById('tickerSymbol').select();
+            }
+        }
+    });
 });
 
 /**
@@ -17,7 +42,7 @@ window.addEventListener('DOMContentLoaded', () => {
  */
 async function fetchMarketSentiment() {
     try {
-        const url = API_CONFIG.current.baseUrl + '/api/fear-greed';
+        const url = API_CONFIG.getFearGreedUrl();
         const response = await fetch(url);
         const json = await response.json();
 
@@ -72,6 +97,12 @@ async function analyzeStock() {
         const json = await response.json();
 
         if (!json.success || !json.data) {
+            // Check if it's an invalid ticker error
+            if (json.error === 'invalid_ticker') {
+                hideLoading();
+                showFunnyError(ticker);
+                return;
+            }
             throw new Error('No data found for this ticker');
         }
 
@@ -98,8 +129,8 @@ function displayResults() {
     // Update company header
     document.getElementById('companyNameDisplay').textContent = stock.companyName || stock.symbol;
     document.getElementById('companySectorDisplay').textContent = `${stock.sector || 'N/A'} • ${stock.industry || 'N/A'}`;
-    document.getElementById('currentPriceDisplay').textContent = `$${stock.currentPrice.toFixed(2)}`;
-    document.getElementById('priceRangeDisplay').textContent = `52W Range: $${stock.fiftyTwoWeekLow?.toFixed(2) || '0'} - $${stock.fiftyTwoWeekHigh?.toFixed(2) || '0'}`;
+    document.getElementById('currentPriceDisplay').textContent = formatPrice(stock.currentPrice, stock.currency);
+    document.getElementById('priceRangeDisplay').textContent = `52W Range: ${formatPrice(stock.fiftyTwoWeekLow, stock.currency)} - ${formatPrice(stock.fiftyTwoWeekHigh, stock.currency)}`;
 
     // Display RSI Overbought/Oversold status
     if (technicalData && technicalData.rsi !== null) {
@@ -339,6 +370,7 @@ function displayTechnical(technical, currentPrice, score) {
     const rsiColor = technical.rsi > 70 ? '#ff4444' : technical.rsi < 30 ? '#00ff87' : '#ffaa00';
     const macdSignal = technical.macd > technical.macd_signal ? '🟢 Bullish' : '🔴 Bearish';
     const trendSignal = currentPrice > technical.sma50 && currentPrice > technical.sma200 ? '🟢 Uptrend' : '🔴 Downtrend';
+    const currency = stockData.currency || 'USD';
 
     card.innerHTML = `
         <h3>📈 Technical Analysis ${stars}</h3>
@@ -353,10 +385,10 @@ function displayTechnical(technical, currentPrice, score) {
                 <strong>Trend:</strong> ${trendSignal}
             </div>
             <div style="margin-bottom: 10px;">
-                <strong>SMA 50:</strong> $${technical.sma50?.toFixed(2) || 'N/A'}
+                <strong>SMA 50:</strong> ${formatPrice(technical.sma50, currency)}
             </div>
             <div style="margin-bottom: 10px;">
-                <strong>SMA 200:</strong> $${technical.sma200?.toFixed(2) || 'N/A'}
+                <strong>SMA 200:</strong> ${formatPrice(technical.sma200, currency)}
             </div>
         </div>
     `;
@@ -369,6 +401,7 @@ function displayActionPlan(scores, stock) {
     const card = document.getElementById('actionCard');
     const percentage = (scores.total / scores.maxTotal) * 100;
     const tech = technicalData;
+    const currency = stock.currency || 'USD';
 
     let actionText = '';
     let entryPrice = '';
@@ -388,26 +421,26 @@ function displayActionPlan(scores, stock) {
 
             if (entryDiff < 0.02) {
                 // Entry is at current price - buy now
-                entryPrice = `Buy now at $${tech.entry_level.toFixed(2)}`;
+                entryPrice = `Buy now at ${formatPrice(tech.entry_level, currency)}`;
             } else if (tech.entry_level > stock.currentPrice) {
                 // Entry is above current price - wait for pullback
-                entryPrice = `Wait for rally to $${tech.entry_level.toFixed(2)}`;
+                entryPrice = `Wait for rally to ${formatPrice(tech.entry_level, currency)}`;
             } else {
                 // Entry is below current price - good entry zone
-                entryPrice = `Good entry at $${tech.entry_level.toFixed(2)} or better`;
+                entryPrice = `Good entry at ${formatPrice(tech.entry_level, currency)} or better`;
             }
 
             // Stop loss should be BELOW entry price
-            stopLoss = `$${(tech.entry_level * 0.96).toFixed(2)}`;
-            target = `$${tech.resistance_level.toFixed(2)}`;
+            stopLoss = formatPrice(tech.entry_level * 0.96, currency);
+            target = formatPrice(tech.resistance_level, currency);
             waveInfo = `<div style="margin-top: 10px; padding: 8px; background: rgba(0,255,135,0.1); border-radius: 6px; font-size: 0.9em;">
                 <strong>📈 Wave Pattern:</strong> ${tech.wave_pattern}<br>
-                <small>Support: $${tech.support_level.toFixed(2)} • Resistance: $${tech.resistance_level.toFixed(2)}</small>
+                <small>Support: ${formatPrice(tech.support_level, currency)} • Resistance: ${formatPrice(tech.resistance_level, currency)}</small>
             </div>`;
         } else {
-            entryPrice = `$${(stock.currentPrice * 0.98).toFixed(2)} - $${(stock.currentPrice * 1.02).toFixed(2)}`;
-            stopLoss = `$${(stock.currentPrice * 0.92).toFixed(2)}`;
-            target = `$${(stock.currentPrice * 1.15).toFixed(2)}`;
+            entryPrice = `${formatPrice(stock.currentPrice * 0.98, currency)} - ${formatPrice(stock.currentPrice * 1.02, currency)}`;
+            stopLoss = formatPrice(stock.currentPrice * 0.92, currency);
+            target = formatPrice(stock.currentPrice * 1.15, currency);
         }
 
     } else if (percentage >= 40) {
@@ -416,17 +449,17 @@ function displayActionPlan(scores, stock) {
         if (hasWaveData) {
             // For HOLD recommendation, don't suggest buying even if at entry level
             // Show what the entry would be IF upgrading to BUY
-            entryPrice = `Monitor - Optimal entry at $${tech.entry_level.toFixed(2)}`;
-            stopLoss = `If entering: $${(tech.entry_level * 0.96).toFixed(2)}`;
-            target = `Potential target: $${tech.resistance_level.toFixed(2)}`;
+            entryPrice = `Monitor - Optimal entry at ${formatPrice(tech.entry_level, currency)}`;
+            stopLoss = `If entering: ${formatPrice(tech.entry_level * 0.96, currency)}`;
+            target = `Potential target: ${formatPrice(tech.resistance_level, currency)}`;
             waveInfo = `<div style="margin-top: 10px; padding: 8px; background: rgba(255,170,0,0.1); border-radius: 6px; font-size: 0.9em;">
                 <strong>📊 Wave Pattern:</strong> ${tech.wave_pattern}<br>
                 <small>Wait for fundamentals or sentiment to improve before entering</small>
             </div>`;
         } else {
-            entryPrice = `Wait for better entry around $${(stock.currentPrice * 0.95).toFixed(2)}`;
-            stopLoss = `$${(stock.currentPrice * 0.92).toFixed(2)}`;
-            target = `$${(stock.currentPrice * 1.08).toFixed(2)}`;
+            entryPrice = `Wait for better entry around ${formatPrice(stock.currentPrice * 0.95, currency)}`;
+            stopLoss = formatPrice(stock.currentPrice * 0.92, currency);
+            target = formatPrice(stock.currentPrice * 1.08, currency);
         }
 
     } else {
@@ -436,10 +469,10 @@ function displayActionPlan(scores, stock) {
             // For SELL recommendation, show exit strategy not entry strategy
             entryPrice = `Not recommended - Overvalued`;
             stopLoss = `N/A - Consider exiting position`;
-            target = `If buying later, wait for $${tech.entry_level.toFixed(2)}`;
+            target = `If buying later, wait for ${formatPrice(tech.entry_level, currency)}`;
             waveInfo = `<div style="margin-top: 10px; padding: 8px; background: rgba(255,68,68,0.1); border-radius: 6px; font-size: 0.9em;">
                 <strong>🔴 Wave Pattern:</strong> ${tech.wave_pattern}<br>
-                <small>Stock is overbought - better entry would be near $${tech.entry_level.toFixed(2)}</small>
+                <small>Stock is overbought - better entry would be near ${formatPrice(tech.entry_level, currency)}</small>
             </div>`;
         } else {
             entryPrice = `Not recommended - Overvalued`;
@@ -474,6 +507,52 @@ function displayActionPlan(scores, stock) {
 /**
  * Helper Functions
  */
+function getCurrencySymbol(currencyCode) {
+    const currencySymbols = {
+        'USD': '$',
+        'EUR': '€',
+        'GBP': '£',
+        'JPY': '¥',
+        'CNY': '¥',
+        'SEK': 'kr',
+        'NOK': 'kr',
+        'DKK': 'kr',
+        'CHF': 'CHF',
+        'CAD': 'C$',
+        'AUD': 'A$',
+        'NZD': 'NZ$',
+        'HKD': 'HK$',
+        'SGD': 'S$',
+        'INR': '₹',
+        'KRW': '₩',
+        'BRL': 'R$',
+        'MXN': 'MX$',
+        'ZAR': 'R',
+        'RUB': '₽',
+        'TRY': '₺',
+        'PLN': 'zł',
+        'THB': '฿',
+        'IDR': 'Rp',
+        'MYR': 'RM',
+        'PHP': '₱',
+        'TWD': 'NT$',
+        'AED': 'د.إ',
+        'SAR': '﷼',
+        'ILS': '₪'
+    };
+    return currencySymbols[currencyCode] || currencyCode + ' ';
+}
+
+function formatPrice(price, currencyCode) {
+    if (!price) return 'N/A';
+    const symbol = getCurrencySymbol(currencyCode || 'USD');
+    // For currencies that typically use symbol after (SEK, NOK, DKK)
+    if (['SEK', 'NOK', 'DKK'].includes(currencyCode)) {
+        return price.toFixed(2) + ' ' + symbol;
+    }
+    return symbol + price.toFixed(2);
+}
+
 function getSectorPE(sector) {
     const sectorPE = {
         'Technology': 30,
@@ -513,10 +592,64 @@ function showError(message) {
     errorEl.classList.add('active');
 }
 
+function showFunnyError(ticker) {
+    const funnyMessages = [
+        `Oops! 💩 Looks like "${ticker}" made a poo-poo... It doesn't exist!`,
+        `404 Stock Not Found! 🔍 "${ticker}" is playing hide and seek... and winning!`,
+        `Whoopsie! 🙈 "${ticker}" took a wrong turn and ended up in the Bermuda Triangle!`,
+        `Houston, we have a problem! 🚀 "${ticker}" is not in our galaxy!`,
+        `Error 404: Stock Not Found! 🤷‍♂️ "${ticker}" ghosted us!`,
+        `Nope! 🚫 "${ticker}" is as real as unicorns and leprechauns!`,
+        `Uh oh! 💀 "${ticker}" has left the building... permanently!`
+    ];
+
+    const randomMessage = funnyMessages[Math.floor(Math.random() * funnyMessages.length)];
+
+    // Hide regular results and show error div
+    document.getElementById('results').style.display = 'none';
+    const errorDiv = document.getElementById('errorResults');
+    errorDiv.innerHTML = `
+        <div class="card" style="text-align: center; padding: 60px 40px; background: linear-gradient(135deg, rgba(255, 68, 68, 0.15), rgba(255, 50, 50, 0.05)); border: 2px solid #ff4444;">
+            <div style="font-size: 6em; margin-bottom: 20px;">💩</div>
+            <h1 style="color: #ff4444; margin-bottom: 20px; font-size: 2em;">Oops! Ticker Not Found</h1>
+            <p style="font-size: 1.3em; margin-bottom: 30px; line-height: 1.6;">
+                ${randomMessage}
+            </p>
+            <div style="background: rgba(0,0,0,0.3); padding: 20px; border-radius: 12px; margin-bottom: 30px;">
+                <p style="font-size: 1.1em; margin-bottom: 15px;">
+                    <strong>Pro Tips:</strong>
+                </p>
+                <ul style="list-style: none; padding: 0; text-align: left; max-width: 500px; margin: 0 auto;">
+                    <li style="margin-bottom: 10px;">✅ Double-check your ticker symbol spelling</li>
+                    <li style="margin-bottom: 10px;">✅ Try searching for the company name on Yahoo Finance</li>
+                    <li style="margin-bottom: 10px;">✅ For international stocks, use the exchange suffix (e.g., KAMBI.ST, VOW3.DE)</li>
+                    <li style="margin-bottom: 10px;">✅ Some tickers might be delisted or merged</li>
+                </ul>
+            </div>
+            <button onclick="closeErrorPage()"
+                    style="padding: 15px 40px; font-size: 1.1em; background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)); border: none; border-radius: 12px; color: white; font-weight: bold; cursor: pointer; font-family: 'Space Mono', monospace;">
+                Try Another Ticker
+            </button>
+            <div style="margin-top: 15px; opacity: 0.6; font-size: 0.9em;">
+                Press <kbd style="background: rgba(255,255,255,0.1); padding: 2px 8px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.2);">ESC</kbd> to close
+            </div>
+        </div>
+    `;
+    errorDiv.style.display = 'block';
+    errorDiv.scrollIntoView({ behavior: 'smooth' });
+}
+
+function closeErrorPage() {
+    document.getElementById('errorResults').style.display = 'none';
+    document.getElementById('tickerSymbol').focus();
+    document.getElementById('tickerSymbol').select();
+}
+
 function hideMessages() {
     document.getElementById('errorMessage').classList.remove('active');
 }
 
 function hideResults() {
     document.getElementById('results').style.display = 'none';
+    document.getElementById('errorResults').style.display = 'none';
 }

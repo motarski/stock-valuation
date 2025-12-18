@@ -20,12 +20,14 @@ const API_CONFIG = {
             baseUrl: 'http://localhost:5001',
             stock: '/api/stock',
             search: '/api/search',
+            fearGreed: '/api/fear-greed',
             health: '/health'
         },
         production: {
             baseUrl: '',  // Empty string means use relative paths
             stock: '/stonks/api/stock',
             search: '/stonks/api/search',
+            fearGreed: '/stonks/api/fear-greed',
             health: '/stonks/health'
         }
     },
@@ -49,6 +51,11 @@ const API_CONFIG = {
     getHealthUrl() {
         const config = this.current;
         return `${config.baseUrl}${config.health}`;
+    },
+
+    getFearGreedUrl() {
+        const config = this.current;
+        return `${config.baseUrl}${config.fearGreed}`;
     }
 };
 

@@ -28,16 +28,39 @@ def get_stock_data(ticker):
         stock = yf.Ticker(ticker)
         info = stock.info
 
+        # Validate that ticker exists and has valid data
+        # Check for multiple indicators that the ticker is valid
+        current_price = info.get('currentPrice', info.get('regularMarketPrice', 0))
+        market_cap = info.get('marketCap', 0)
+        long_name = info.get('longName', '')
+
+        # If no price and no market cap and no company name, ticker is invalid
+        if not current_price and not market_cap and not long_name:
+            return jsonify({
+                'success': False,
+                'error': 'invalid_ticker',
+                'message': f'Ticker "{ticker.upper()}" does not exist or has no available data.'
+            }), 404
+
+        # Additional check: if price is 0 and market cap is 0, likely invalid
+        if current_price == 0 and market_cap == 0:
+            return jsonify({
+                'success': False,
+                'error': 'invalid_ticker',
+                'message': f'Ticker "{ticker.upper()}" does not have valid price data.'
+            }), 404
+
         # Extract key metrics
         data = {
             'symbol': ticker,
             'companyName': info.get('longName', ticker),
             'sector': info.get('sector', ''),
             'industry': info.get('industry', ''),
-            'currentPrice': info.get('currentPrice', info.get('regularMarketPrice', 0)),
+            'currentPrice': current_price,
+            'currency': info.get('currency', 'USD'),
             'eps': info.get('trailingEps', 0),
             'bookValue': info.get('bookValue', 0),
-            'marketCap': info.get('marketCap', 0),
+            'marketCap': market_cap,
             'peRatio': info.get('trailingPE', 0),
             'forwardPE': info.get('forwardPE', 0),
             'beta': info.get('beta', 0),
