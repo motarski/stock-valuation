@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart Stock Recommender</title>
+    <title>Motarski Stock Analyzer</title>
 
     <!-- External Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Sora:wght@300;400;600;700;800&display=swap" rel="stylesheet">
@@ -15,14 +15,10 @@
     <div class="grain"></div>
 
     <div class="container">
-        <div class="header">
-            <h1>Smart Stock Recommender</h1>
-            <p>Simple, actionable stock analysis powered by AI</p>
-        </div>
 
         <!-- Market Sentiment Card -->
         <div class="card" id="marketSentimentCard">
-            <h2>😨 Market Sentiment</h2>
+            <h2>Market Sentiment</h2>
             <div id="fearGreedDisplay" style="text-align: center; padding: 20px;">
                 <div style="font-size: 3em; margin-bottom: 10px;" id="sentimentEmoji">📊</div>
                 <div style="font-size: 2em; font-weight: bold; margin-bottom: 10px;" id="sentimentRating">Loading...</div>
@@ -33,14 +29,14 @@
 
         <!-- Stock Input Card -->
         <div class="card">
-            <h2>🔍 Analyze Stock</h2>
+            <h2>Analyze Stock</h2>
 
             <div class="ticker-section">
                 <div class="ticker-input-group">
                     <label style="font-weight: 600; margin-bottom: 8px; color: var(--text-secondary);">Stock Ticker Symbol</label>
                     <input type="text" id="tickerSymbol" placeholder="e.g., AAPL, NVDA, TSLA" style="width: 100%; padding: 14px 18px; border: 2px solid var(--border-color); border-radius: 12px; font-size: 1em; background: var(--bg-secondary); color: var(--text-primary); font-family: 'Space Mono', monospace;">
                 </div>
-                <button class="btn btn-fetch" onclick="analyzeStock()">📊 Analyze</button>
+                <button class="btn btn-fetch" onclick="analyzeStock()">🔍 Analyze</button>
             </div>
 
             <div id="loadingMessage" class="loading">Analyzing stock...</div>

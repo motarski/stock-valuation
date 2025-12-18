@@ -383,8 +383,22 @@ function displayActionPlan(scores, stock) {
         actionText = '💰 Consider buying on dips';
 
         if (hasWaveData) {
-            entryPrice = `$${tech.entry_level.toFixed(2)}`;
-            stopLoss = `$${(tech.support_level * 0.98).toFixed(2)}`;
+            // Check if entry level is at or near current price (within 2%)
+            const entryDiff = Math.abs(tech.entry_level - stock.currentPrice) / stock.currentPrice;
+
+            if (entryDiff < 0.02) {
+                // Entry is at current price - buy now
+                entryPrice = `Buy now at $${tech.entry_level.toFixed(2)}`;
+            } else if (tech.entry_level > stock.currentPrice) {
+                // Entry is above current price - wait for pullback
+                entryPrice = `Wait for rally to $${tech.entry_level.toFixed(2)}`;
+            } else {
+                // Entry is below current price - good entry zone
+                entryPrice = `Good entry at $${tech.entry_level.toFixed(2)} or better`;
+            }
+
+            // Stop loss should be BELOW entry price
+            stopLoss = `$${(tech.entry_level * 0.96).toFixed(2)}`;
             target = `$${tech.resistance_level.toFixed(2)}`;
             waveInfo = `<div style="margin-top: 10px; padding: 8px; background: rgba(0,255,135,0.1); border-radius: 6px; font-size: 0.9em;">
                 <strong>📈 Wave Pattern:</strong> ${tech.wave_pattern}<br>
@@ -400,12 +414,14 @@ function displayActionPlan(scores, stock) {
         actionText = '⏸️ Hold current position or wait';
 
         if (hasWaveData) {
-            entryPrice = `Wait for pullback to $${tech.entry_level.toFixed(2)}`;
-            stopLoss = `$${(tech.support_level * 0.98).toFixed(2)}`;
-            target = `$${(stock.currentPrice * 1.08).toFixed(2)}`;
+            // For HOLD recommendation, don't suggest buying even if at entry level
+            // Show what the entry would be IF upgrading to BUY
+            entryPrice = `Monitor - Optimal entry at $${tech.entry_level.toFixed(2)}`;
+            stopLoss = `If entering: $${(tech.entry_level * 0.96).toFixed(2)}`;
+            target = `Potential target: $${tech.resistance_level.toFixed(2)}`;
             waveInfo = `<div style="margin-top: 10px; padding: 8px; background: rgba(255,170,0,0.1); border-radius: 6px; font-size: 0.9em;">
                 <strong>📊 Wave Pattern:</strong> ${tech.wave_pattern}<br>
-                <small>Better entry expected at support levels</small>
+                <small>Wait for fundamentals or sentiment to improve before entering</small>
             </div>`;
         } else {
             entryPrice = `Wait for better entry around $${(stock.currentPrice * 0.95).toFixed(2)}`;
@@ -417,16 +433,17 @@ function displayActionPlan(scores, stock) {
         actionText = '⚠️ Avoid or consider selling';
 
         if (hasWaveData) {
-            entryPrice = `Not recommended (wait for $${tech.entry_level.toFixed(2)})`;
-            stopLoss = `$${(stock.currentPrice * 0.97).toFixed(2)}`;
-            target = `N/A`;
+            // For SELL recommendation, show exit strategy not entry strategy
+            entryPrice = `Not recommended - Overvalued`;
+            stopLoss = `N/A - Consider exiting position`;
+            target = `If buying later, wait for $${tech.entry_level.toFixed(2)}`;
             waveInfo = `<div style="margin-top: 10px; padding: 8px; background: rgba(255,68,68,0.1); border-radius: 6px; font-size: 0.9em;">
                 <strong>🔴 Wave Pattern:</strong> ${tech.wave_pattern}<br>
-                <small>Wait for better wave structure</small>
+                <small>Stock is overbought - better entry would be near $${tech.entry_level.toFixed(2)}</small>
             </div>`;
         } else {
-            entryPrice = `Not recommended`;
-            stopLoss = `$${(stock.currentPrice * 0.97).toFixed(2)}`;
+            entryPrice = `Not recommended - Overvalued`;
+            stopLoss = `N/A - Consider exiting position`;
             target = `N/A`;
         }
     }
@@ -438,13 +455,13 @@ function displayActionPlan(scores, stock) {
                 <strong>${actionText}</strong>
             </div>
             <div style="margin-bottom: 10px;">
-                <strong>Entry Price:</strong> ${entryPrice}
+                <strong>${percentage < 40 ? 'Buy Entry:' : 'Entry Price:'}</strong> ${entryPrice}
             </div>
             <div style="margin-bottom: 10px;">
-                <strong>Stop Loss:</strong> ${stopLoss}
+                <strong>${percentage < 40 ? 'Recommendation:' : 'Stop Loss:'}</strong> ${stopLoss}
             </div>
             <div style="margin-bottom: 10px;">
-                <strong>Target:</strong> ${target}
+                <strong>${percentage < 40 ? 'Future Entry:' : 'Target:'}</strong> ${target}
             </div>
             ${waveInfo}
             <div style="margin-top: 15px; padding: 10px; background: rgba(255,170,0,0.1); border-radius: 8px; font-size: 0.9em;">

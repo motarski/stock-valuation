@@ -266,7 +266,14 @@ def detect_elliott_waves(prices):
         price_position = (current_price - support) / price_range if price_range > 0 else 0.5
 
         # Entry logic based on Elliott Wave principles
-        if price_position < 0.3:
+        # IMPORTANT: Check if price has broken below support first
+        if current_price < support:
+            # Price is BELOW support - potential oversold/capitulation zone
+            pattern = "Below Support - Oversold/Capitulation"
+            # Entry at current level or wait for support retest
+            entry_level = current_price  # Enter now or near current price
+
+        elif price_position < 0.3:
             # Near support - possible Wave 2 or Wave 4 correction (BEST entry)
             pattern = "Wave 2/4 Correction - Near Support"
             entry_level = support * 1.02  # Slightly above support
