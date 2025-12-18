@@ -6,6 +6,7 @@
 let stockData = null;
 let technicalData = null;
 let sentimentData = null;
+let tradingViewWidget = null;
 
 // Fetch market sentiment on page load
 window.addEventListener('DOMContentLoaded', () => {
@@ -73,21 +74,95 @@ function displayMarketSentiment(data) {
     let trendDisplay = '';
     let trendEmoji = '';
     if (data.trend === 'increasing') {
-        trendEmoji = '📈';
+        trendEmoji = '<i class="fa-solid fa-arrow-trend-up"></i>';
         trendDisplay = 'Greed Rising';
     } else if (data.trend === 'decreasing') {
-        trendEmoji = '📉';
+        trendEmoji = '<i class="fa-solid fa-arrow-trend-down"></i>';
         trendDisplay = 'Fear Rising';
     } else {
-        trendEmoji = '➡️';
+        trendEmoji = '<i class="fa-solid fa-arrow-right"></i>';
         trendDisplay = 'Stable';
     }
 
-    document.getElementById('sentimentEmoji').textContent = emoji;
+    document.getElementById('sentimentEmoji').innerHTML = emoji;
     document.getElementById('sentimentRating').textContent = data.rating;
     document.getElementById('sentimentRating').style.color = color;
     document.getElementById('sentimentScore').textContent = `Score: ${data.score}/100 • VIX: ${data.vix.toFixed(2)}`;
-    document.getElementById('sentimentSource').textContent = `${data.source} • ${trendEmoji} ${trendDisplay}`;
+    document.getElementById('sentimentSource').innerHTML = `${data.source} • ${trendEmoji} ${trendDisplay}`;
+}
+
+/**
+ * Initialize TradingView Chart with Cyberpunk Theme
+ */
+function initTradingViewChart(ticker, exchange = '') {
+    // Destroy existing widget if present
+    if (tradingViewWidget) {
+        try {
+            tradingViewWidget.remove();
+        } catch (e) {
+            // Ignore errors during removal
+        }
+    }
+
+    // Clear the container
+    const container = document.getElementById('tradingview_chart');
+    container.innerHTML = '';
+
+    // Map common exchanges
+    const exchangeMap = {
+        'ST': 'OMXSTO',  // Stockholm
+        'DE': 'XETRA',   // Germany
+        'L': 'LSE',      // London
+        'PA': 'EURONEXT' // Paris
+    };
+
+    // Determine symbol format for TradingView
+    let symbol = ticker;
+    if (exchange) {
+        const tvExchange = exchangeMap[exchange] || exchange;
+        symbol = `${tvExchange}:${ticker.replace(`.${exchange}`, '')}`;
+    } else {
+        // Default to NASDAQ for US stocks
+        symbol = `NASDAQ:${ticker}`;
+    }
+
+    // Create new widget with cyberpunk theme
+    tradingViewWidget = new TradingView.widget({
+        "autosize": true,
+        "symbol": symbol,
+        "interval": "D",
+        "timezone": "Etc/UTC",
+        "theme": "dark",
+        "style": "1",
+        "locale": "en",
+        "toolbar_bg": "#0a0a14",
+        "enable_publishing": false,
+        "backgroundColor": "#0d0d1a",
+        "gridColor": "rgba(0, 255, 255, 0.05)",
+        "hide_top_toolbar": false,
+        "hide_legend": false,
+        "save_image": false,
+        "container_id": "tradingview_chart",
+        "studies": [
+            "MASimple@tv-basicstudies",
+            "RSI@tv-basicstudies"
+        ],
+        "overrides": {
+            // Cyberpunk color scheme
+            "paneProperties.background": "#0d0d1a",
+            "paneProperties.backgroundType": "solid",
+            "paneProperties.vertGridProperties.color": "rgba(0, 255, 255, 0.05)",
+            "paneProperties.horzGridProperties.color": "rgba(0, 255, 255, 0.05)",
+            "symbolWatermarkProperties.transparency": 90,
+            "scalesProperties.textColor": "#b8c5db",
+            "mainSeriesProperties.candleStyle.upColor": "#00ff88",
+            "mainSeriesProperties.candleStyle.downColor": "#ff0055",
+            "mainSeriesProperties.candleStyle.borderUpColor": "#00ff88",
+            "mainSeriesProperties.candleStyle.borderDownColor": "#ff0055",
+            "mainSeriesProperties.candleStyle.wickUpColor": "#00ff88",
+            "mainSeriesProperties.candleStyle.wickDownColor": "#ff0055"
+        }
+    });
 }
 
 /**
@@ -122,6 +197,13 @@ async function analyzeStock() {
 
         stockData = json.data;
         technicalData = json.data.technical;
+
+        // Extract exchange from ticker (e.g., KAMBI.ST -> ST)
+        const exchangeMatch = ticker.match(/\.([A-Z]+)$/);
+        const exchange = exchangeMatch ? exchangeMatch[1] : '';
+
+        // Initialize TradingView chart
+        initTradingViewChart(ticker, exchange);
 
         // Calculate and display results
         displayResults();
@@ -284,27 +366,27 @@ function displayRecommendation(scores, stock) {
 
     if (percentage >= 70) {
         recommendation = 'STRONG BUY';
-        emoji = '🎯';
+        emoji = '<i class="fa-solid fa-bullseye"></i>';
         color = '#00ff87';
         bgGradient = 'linear-gradient(135deg, rgba(0, 255, 135, 0.2), rgba(0, 200, 100, 0.1))';
     } else if (percentage >= 55) {
         recommendation = 'BUY';
-        emoji = '✅';
+        emoji = '<i class="fa-solid fa-circle-check"></i>';
         color = '#00ff87';
         bgGradient = 'linear-gradient(135deg, rgba(0, 255, 135, 0.15), rgba(0, 200, 100, 0.05))';
     } else if (percentage >= 40) {
         recommendation = 'HOLD';
-        emoji = '⏸️';
+        emoji = '<i class="fa-solid fa-pause"></i>';
         color = '#ffaa00';
         bgGradient = 'linear-gradient(135deg, rgba(255, 170, 0, 0.15), rgba(255, 140, 0, 0.05))';
     } else if (percentage >= 25) {
         recommendation = 'SELL';
-        emoji = '⚠️';
+        emoji = '<i class="fa-solid fa-triangle-exclamation"></i>';
         color = '#ff4444';
         bgGradient = 'linear-gradient(135deg, rgba(255, 68, 68, 0.15), rgba(255, 50, 50, 0.05))';
     } else {
         recommendation = 'STRONG SELL';
-        emoji = '🔴';
+        emoji = '<i class="fa-solid fa-circle-xmark"></i>';
         color = '#ff4444';
         bgGradient = 'linear-gradient(135deg, rgba(255, 68, 68, 0.2), rgba(255, 50, 50, 0.1))';
     }
@@ -356,7 +438,7 @@ function displayFundamentals(stock, score) {
     const position = ((stock.currentPrice - stock.fiftyTwoWeekLow) / range * 100).toFixed(0);
 
     card.innerHTML = `
-        <h3>📊 Fundamentals ${stars}</h3>
+        <h3><i class="fa-solid fa-chart-pie"></i> Fundamentals ${stars}</h3>
         <div style="margin-top: 15px;">
             <div style="margin-bottom: 10px;">
                 <strong>P/E Ratio:</strong> ${stock.peRatio?.toFixed(2) || 'N/A'} ${peStatus}
@@ -385,17 +467,17 @@ function displayTechnical(technical, currentPrice, score) {
     const stars = '⭐'.repeat(score) + '☆'.repeat(5 - score);
 
     if (!technical) {
-        card.innerHTML = '<h3>📈 Technical Analysis</h3><p>No technical data available</p>';
+        card.innerHTML = '<h3><i class="fa-solid fa-chart-line"></i> Technical Analysis</h3><p>No technical data available</p>';
         return;
     }
 
     const rsiColor = technical.rsi > 70 ? '#ff4444' : technical.rsi < 30 ? '#00ff87' : '#ffaa00';
-    const macdSignal = technical.macd > technical.macd_signal ? '🟢 Bullish' : '🔴 Bearish';
-    const trendSignal = currentPrice > technical.sma50 && currentPrice > technical.sma200 ? '🟢 Uptrend' : '🔴 Downtrend';
+    const macdSignal = technical.macd > technical.macd_signal ? '<i class="fa-solid fa-circle" style="color: #00ff87;"></i> Bullish' : '<i class="fa-solid fa-circle" style="color: #ff4444;"></i> Bearish';
+    const trendSignal = currentPrice > technical.sma50 && currentPrice > technical.sma200 ? '<i class="fa-solid fa-circle" style="color: #00ff87;"></i> Uptrend' : '<i class="fa-solid fa-circle" style="color: #ff4444;"></i> Downtrend';
     const currency = stockData.currency || 'USD';
 
     card.innerHTML = `
-        <h3>📈 Technical Analysis ${stars}</h3>
+        <h3><i class="fa-solid fa-chart-line"></i> Technical Analysis ${stars}</h3>
         <div style="margin-top: 15px;">
             <div style="margin-bottom: 10px;">
                 <strong>RSI (14):</strong> <span style="color: ${rsiColor}; font-weight: bold;">${technical.rsi?.toFixed(2) || 'N/A'}</span>
@@ -435,7 +517,7 @@ function displayActionPlan(scores, stock) {
     const hasWaveData = tech && tech.entry_level && tech.support_level && tech.resistance_level;
 
     if (percentage >= 60) {
-        actionText = '💰 Consider buying on dips';
+        actionText = '<i class="fa-solid fa-coins"></i> Consider buying on dips';
 
         if (hasWaveData) {
             // Check if entry level is at or near current price (within 2%)
@@ -456,7 +538,7 @@ function displayActionPlan(scores, stock) {
             stopLoss = formatPrice(tech.entry_level * 0.96, currency);
             target = formatPrice(tech.resistance_level, currency);
             waveInfo = `<div style="margin-top: 10px; padding: 8px; background: rgba(0,255,135,0.1); border-radius: 6px; font-size: 0.9em;">
-                <strong>📈 Wave Pattern:</strong> ${tech.wave_pattern}<br>
+                <strong><i class="fa-solid fa-chart-line"></i> Wave Pattern:</strong> ${tech.wave_pattern}<br>
                 <small>Support: ${formatPrice(tech.support_level, currency)} • Resistance: ${formatPrice(tech.resistance_level, currency)}</small>
             </div>`;
         } else {
@@ -466,7 +548,7 @@ function displayActionPlan(scores, stock) {
         }
 
     } else if (percentage >= 40) {
-        actionText = '⏸️ Hold current position or wait';
+        actionText = '<i class="fa-solid fa-pause"></i> Hold current position or wait';
 
         if (hasWaveData) {
             // For HOLD recommendation, don't suggest buying even if at entry level
@@ -475,7 +557,7 @@ function displayActionPlan(scores, stock) {
             stopLoss = `If entering: ${formatPrice(tech.entry_level * 0.96, currency)}`;
             target = `Potential target: ${formatPrice(tech.resistance_level, currency)}`;
             waveInfo = `<div style="margin-top: 10px; padding: 8px; background: rgba(255,170,0,0.1); border-radius: 6px; font-size: 0.9em;">
-                <strong>📊 Wave Pattern:</strong> ${tech.wave_pattern}<br>
+                <strong><i class="fa-solid fa-chart-pie"></i> Wave Pattern:</strong> ${tech.wave_pattern}<br>
                 <small>Wait for fundamentals or sentiment to improve before entering</small>
             </div>`;
         } else {
@@ -485,7 +567,7 @@ function displayActionPlan(scores, stock) {
         }
 
     } else {
-        actionText = '⚠️ Avoid or consider selling';
+        actionText = '<i class="fa-solid fa-triangle-exclamation"></i> Avoid or consider selling';
 
         if (hasWaveData) {
             // For SELL recommendation, show exit strategy not entry strategy
@@ -493,7 +575,7 @@ function displayActionPlan(scores, stock) {
             stopLoss = `N/A - Consider exiting position`;
             target = `If buying later, wait for ${formatPrice(tech.entry_level, currency)}`;
             waveInfo = `<div style="margin-top: 10px; padding: 8px; background: rgba(255,68,68,0.1); border-radius: 6px; font-size: 0.9em;">
-                <strong>🔴 Wave Pattern:</strong> ${tech.wave_pattern}<br>
+                <strong><i class="fa-solid fa-circle-xmark"></i> Wave Pattern:</strong> ${tech.wave_pattern}<br>
                 <small>Stock is overbought - better entry would be near ${formatPrice(tech.entry_level, currency)}</small>
             </div>`;
         } else {
@@ -504,7 +586,7 @@ function displayActionPlan(scores, stock) {
     }
 
     card.innerHTML = `
-        <h3>🎯 Action Plan</h3>
+        <h3><i class="fa-solid fa-bullseye"></i> Action Plan</h3>
         <div style="margin-top: 15px;">
             <div style="margin-bottom: 15px; padding: 10px; background: rgba(0,0,0,0.2); border-radius: 8px;">
                 <strong>${actionText}</strong>
@@ -613,13 +695,13 @@ function showError(message) {
 
 function showFunnyError(ticker) {
     const funnyMessages = [
-        `Oops! 💩 Looks like "${ticker}" made a poo-poo... It doesn't exist!`,
-        `404 Stock Not Found! 🔍 "${ticker}" is playing hide and seek... and winning!`,
-        `Whoopsie! 🙈 "${ticker}" took a wrong turn and ended up in the Bermuda Triangle!`,
-        `Houston, we have a problem! 🚀 "${ticker}" is not in our galaxy!`,
-        `Error 404: Stock Not Found! 🤷‍♂️ "${ticker}" ghosted us!`,
-        `Nope! 🚫 "${ticker}" is as real as unicorns and leprechauns!`,
-        `Uh oh! 💀 "${ticker}" has left the building... permanently!`
+        `Oops! <i class="fa-solid fa-poo"></i> Looks like "${ticker}" made a poo-poo... It doesn't exist!`,
+        `404 Stock Not Found! <i class="fa-solid fa-magnifying-glass"></i> "${ticker}" is playing hide and seek... and winning!`,
+        `Whoopsie! <i class="fa-solid fa-eye-slash"></i> "${ticker}" took a wrong turn and ended up in the Bermuda Triangle!`,
+        `Houston, we have a problem! <i class="fa-solid fa-rocket"></i> "${ticker}" is not in our galaxy!`,
+        `Error 404: Stock Not Found! <i class="fa-solid fa-ghost"></i> "${ticker}" ghosted us!`,
+        `Nope! <i class="fa-solid fa-ban"></i> "${ticker}" is as real as unicorns and leprechauns!`,
+        `Uh oh! <i class="fa-solid fa-skull"></i> "${ticker}" has left the building... permanently!`
     ];
 
     const randomMessage = funnyMessages[Math.floor(Math.random() * funnyMessages.length)];
@@ -629,7 +711,7 @@ function showFunnyError(ticker) {
     const errorDiv = document.getElementById('errorResults');
     errorDiv.innerHTML = `
         <div class="card" style="text-align: center; padding: 60px 40px; background: linear-gradient(135deg, rgba(255, 68, 68, 0.15), rgba(255, 50, 50, 0.05)); border: 2px solid #ff4444;">
-            <div style="font-size: 6em; margin-bottom: 20px;">💩</div>
+            <div style="font-size: 6em; margin-bottom: 20px;"><i class="fa-solid fa-poo" style="color: #ff4444;"></i></div>
             <h1 style="color: #ff4444; margin-bottom: 20px; font-size: 2em;">Oops! Ticker Not Found</h1>
             <p style="font-size: 1.3em; margin-bottom: 30px; line-height: 1.6;">
                 ${randomMessage}
@@ -639,10 +721,10 @@ function showFunnyError(ticker) {
                     <strong>Pro Tips:</strong>
                 </p>
                 <ul style="list-style: none; padding: 0; text-align: left; max-width: 500px; margin: 0 auto;">
-                    <li style="margin-bottom: 10px;">✅ Double-check your ticker symbol spelling</li>
-                    <li style="margin-bottom: 10px;">✅ Try searching for the company name on Yahoo Finance</li>
-                    <li style="margin-bottom: 10px;">✅ For international stocks, use the exchange suffix (e.g., KAMBI.ST, VOW3.DE)</li>
-                    <li style="margin-bottom: 10px;">✅ Some tickers might be delisted or merged</li>
+                    <li style="margin-bottom: 10px;"><i class="fa-solid fa-circle-check" style="color: #00ff88;"></i> Double-check your ticker symbol spelling</li>
+                    <li style="margin-bottom: 10px;"><i class="fa-solid fa-circle-check" style="color: #00ff88;"></i> Try searching for the company name on Yahoo Finance</li>
+                    <li style="margin-bottom: 10px;"><i class="fa-solid fa-circle-check" style="color: #00ff88;"></i> For international stocks, use the exchange suffix (e.g., KAMBI.ST, VOW3.DE)</li>
+                    <li style="margin-bottom: 10px;"><i class="fa-solid fa-circle-check" style="color: #00ff88;"></i> Some tickers might be delisted or merged</li>
                 </ul>
             </div>
             <button onclick="closeErrorPage()"
