@@ -385,30 +385,57 @@ def get_fear_greed():
 
             # Convert VIX to Fear & Greed scale (0-100, where 100 is extreme greed)
             # Inverse relationship: Low VIX = High Greed
-            # Score ranges:
-            # 0-25 = Extreme Fear
-            # 26-45 = Fear
-            # 46-55 = Neutral
-            # 56-75 = Greed
-            # 76-100 = Extreme Greed
+            # Using a dynamic formula calibrated to approximate CNN Fear & Greed Index
+            #
+            # Note: CNN uses 7 indicators (not just VIX), so this is an approximation
+            # Adjusted to be more conservative (show more fear) to match CNN methodology
+            #
+            # VIX Reference Points (calibrated to CNN):
+            # VIX ~10 = Score 90 (Extreme Greed)
+            # VIX ~12 = Score 75 (Greed)
+            # VIX ~14 = Score 60 (Greed)
+            # VIX ~17 = Score 40 (Fear) - matches CNN
+            # VIX ~20 = Score 30 (Fear)
+            # VIX ~25 = Score 15 (Extreme Fear)
+            # VIX ~40+ = Score 0-5 (Extreme Fear)
 
-            if current_vix < 12:
-                score = 85  # Extreme Greed (76-100)
-                rating = 'Extreme Greed'
-            elif current_vix < 15:
-                score = 65  # Greed (56-75)
-                rating = 'Greed'
-            elif current_vix < 17:
-                score = 50  # Neutral (46-55)
-                rating = 'Neutral'
-            elif current_vix < 20:
-                score = 38  # Fear (26-45) - VIX ~17-20
-                rating = 'Fear'
-            elif current_vix < 30:
-                score = 20  # Extreme Fear (0-25)
-                rating = 'Extreme Fear'
+            # Dynamic calculation using piecewise linear interpolation
+            if current_vix <= 10:
+                score = 90
+            elif current_vix <= 12:
+                # Interpolate between 90 (VIX=10) and 75 (VIX=12)
+                score = 90 - ((current_vix - 10) / 2) * 15
+            elif current_vix <= 14:
+                # Interpolate between 75 (VIX=12) and 60 (VIX=14)
+                score = 75 - ((current_vix - 12) / 2) * 15
+            elif current_vix <= 17:
+                # Interpolate between 60 (VIX=14) and 40 (VIX=17)
+                score = 60 - ((current_vix - 14) / 3) * 20
+            elif current_vix <= 20:
+                # Interpolate between 40 (VIX=17) and 30 (VIX=20)
+                score = 40 - ((current_vix - 17) / 3) * 10
+            elif current_vix <= 25:
+                # Interpolate between 30 (VIX=20) and 15 (VIX=25)
+                score = 30 - ((current_vix - 20) / 5) * 15
+            elif current_vix <= 40:
+                # Interpolate between 15 (VIX=25) and 2 (VIX=40)
+                score = 15 - ((current_vix - 25) / 15) * 13
             else:
-                score = 10  # Extreme Fear (0-25)
+                score = 2
+
+            # Round to integer
+            score = int(round(score))
+
+            # Determine rating based on score
+            if score >= 76:
+                rating = 'Extreme Greed'
+            elif score >= 56:
+                rating = 'Greed'
+            elif score >= 46:
+                rating = 'Neutral'
+            elif score >= 26:
+                rating = 'Fear'
+            else:
                 rating = 'Extreme Fear'
 
             # Get trend

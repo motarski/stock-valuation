@@ -69,11 +69,25 @@ function displayMarketSentiment(data) {
     const color = data.rating.includes('Greed') ? '#00ff87' :
                   data.rating.includes('Neutral') ? '#ffaa00' : '#ff4444';
 
+    // Format trend with arrows and clearer labels
+    let trendDisplay = '';
+    let trendEmoji = '';
+    if (data.trend === 'increasing') {
+        trendEmoji = '📈';
+        trendDisplay = 'Greed Rising';
+    } else if (data.trend === 'decreasing') {
+        trendEmoji = '📉';
+        trendDisplay = 'Fear Rising';
+    } else {
+        trendEmoji = '➡️';
+        trendDisplay = 'Stable';
+    }
+
     document.getElementById('sentimentEmoji').textContent = emoji;
     document.getElementById('sentimentRating').textContent = data.rating;
     document.getElementById('sentimentRating').style.color = color;
     document.getElementById('sentimentScore').textContent = `Score: ${data.score}/100 • VIX: ${data.vix.toFixed(2)}`;
-    document.getElementById('sentimentSource').textContent = `Source: ${data.source} • Trend: ${data.trend}`;
+    document.getElementById('sentimentSource').textContent = `${data.source} • ${trendEmoji} ${trendDisplay}`;
 }
 
 /**
@@ -165,9 +179,17 @@ function displayResults() {
     displayTechnical(technicalData, stock.currentPrice, scores.technical);
     displayActionPlan(scores, stock);
 
-    // Show results
-    document.getElementById('results').style.display = 'block';
-    document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
+    // Show results and scroll to show the entire results section including header
+    const resultsDiv = document.getElementById('results');
+    resultsDiv.style.display = 'block';
+
+    // Scroll to results with some padding above to ensure header is visible
+    setTimeout(() => {
+        const yOffset = -20; // 20px padding above results
+        const element = resultsDiv;
+        const y = element.getBoundingClientRect().top + window.pageYOffset + yOffset;
+        window.scrollTo({ top: y, behavior: 'smooth' });
+    }, 100);
 }
 
 /**
@@ -497,9 +519,6 @@ function displayActionPlan(scores, stock) {
                 <strong>${percentage < 40 ? 'Future Entry:' : 'Target:'}</strong> ${target}
             </div>
             ${waveInfo}
-            <div style="margin-top: 15px; padding: 10px; background: rgba(255,170,0,0.1); border-radius: 8px; font-size: 0.9em;">
-                <strong>⚠️ Remember:</strong> This is not financial advice. Always do your own research and never invest more than you can afford to lose.
-            </div>
         </div>
     `;
 }
