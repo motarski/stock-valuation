@@ -930,6 +930,160 @@ small {
     border-radius: 12px;
 }
 
+/* Market Sentiment Card */
+.sentiment-card {
+    background: linear-gradient(135deg, var(--bg-secondary) 0%, rgba(139, 92, 246, 0.05) 100%);
+    border: 2px solid transparent;
+    border-radius: 24px;
+    padding: 36px 40px;
+    width: 100%;
+    max-width: 480px;
+    margin-bottom: 50px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5), 0 0 0 1px var(--border-color);
+    position: relative;
+    overflow: hidden;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Animated gradient border */
+.sentiment-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 24px;
+    padding: 2px;
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.6), rgba(0, 255, 255, 0.4), rgba(139, 92, 246, 0.6));
+    background-size: 200% 200%;
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask-composite: exclude;
+    animation: sentimentBorderFlow 6s ease infinite;
+    opacity: 0.4;
+}
+
+@keyframes sentimentBorderFlow {
+    0%, 100% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+}
+
+.sentiment-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7), 0 0 40px rgba(139, 92, 246, 0.3);
+}
+
+.sentiment-card:hover::before {
+    opacity: 0.8;
+}
+
+.sentiment-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+.sentiment-header i {
+    font-size: 1.5em;
+    color: var(--accent-secondary);
+    filter: drop-shadow(0 0 15px rgba(139, 92, 246, 0.6));
+}
+
+.sentiment-header h3 {
+    font-size: 1.2em;
+    margin: 0;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    background: linear-gradient(135deg, var(--text-primary), var(--accent-secondary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.sentiment-display {
+    text-align: center;
+    position: relative;
+    z-index: 1;
+}
+
+.sentiment-emoji {
+    font-size: 3.5em;
+    margin-bottom: 16px;
+    display: block;
+    animation: emojiFloat 3s ease-in-out infinite;
+}
+
+@keyframes emojiFloat {
+    0%, 100% {
+        transform: translateY(0px);
+    }
+    50% {
+        transform: translateY(-10px);
+    }
+}
+
+.sentiment-rating {
+    font-size: 2.5em;
+    font-weight: 800;
+    margin-bottom: 12px;
+    letter-spacing: 0.5px;
+    text-shadow: 0 0 30px currentColor;
+}
+
+.sentiment-score {
+    font-size: 1.15em;
+    opacity: 0.9;
+    margin-bottom: 12px;
+    font-weight: 500;
+}
+
+.sentiment-source {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border-color);
+    font-size: 0.85em;
+    opacity: 0.7;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+/* Mobile responsive for sentiment card */
+@media (max-width: 480px) {
+    .sentiment-card {
+        padding: 28px 24px;
+    }
+
+    .sentiment-emoji {
+        font-size: 2.5em;
+    }
+
+    .sentiment-rating {
+        font-size: 2em;
+    }
+
+    .sentiment-score {
+        font-size: 1em;
+    }
+
+    .sentiment-source {
+        flex-direction: column;
+        gap: 6px;
+        font-size: 0.8em;
+    }
+
+    .sentiment-source span:nth-child(2) {
+        display: none; /* Hide the separator on mobile */
+    }
+}
+
 /* Scrollbar styling */
 ::-webkit-scrollbar {
     width: 10px;

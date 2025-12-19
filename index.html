@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Motarski Stonks Analyzer</title>
+    <link rel="icon" href="assets/favicon.ico" type="image/x-icon">
 
     <!-- SEO Meta Tags -->
     <meta name="description" content="Analyze stocks with real-time sentiment, fundamentals, and simple visual insights. Lightweight market analysis built for quick signals and daily decisions.">
@@ -43,13 +44,18 @@
         <div style="min-height: 50vh; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 40px 20px;">
 
             <!-- Market Sentiment Card -->
-            <div id="marketSentimentCard" style="background: var(--bg-secondary); border: 2px solid var(--border-color); border-radius: 16px; padding: 32px; width: 100%; max-width: 450px; margin-bottom: 50px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 0 60px rgba(139, 92, 246, 0.15);">
-                <h3 style="font-size: 1.1em; margin: 0 0 20px 0; text-align: center; opacity: 0.9; font-weight: 600; letter-spacing: 0.5px;">Market Sentiment</h3>
-                <div id="fearGreedDisplay" style="text-align: center;">
-                    <div style="display: none;" id="sentimentEmoji">📊</div>
-                    <div style="font-size: 2em; font-weight: bold; margin-bottom: 12px;" id="sentimentRating">Loading...</div>
-                    <div style="font-size: 1.1em; opacity: 0.85;" id="sentimentScore">Fetching...</div>
-                    <div style="margin-top: 12px; font-size: 0.8em; opacity: 0.6;" id="sentimentSource"></div>
+            <div id="marketSentimentCard" class="sentiment-card">
+                <div class="sentiment-header">
+                    <i class="fa-solid fa-chart-mixed"></i>
+                    <h3>Market Sentiment</h3>
+                </div>
+                <div id="fearGreedDisplay" class="sentiment-display">
+                    <div class="sentiment-emoji" id="sentimentEmoji">
+                        <i class="fa-solid fa-spinner fa-spin"></i>
+                    </div>
+                    <div class="sentiment-rating" id="sentimentRating">Loading...</div>
+                    <div class="sentiment-score" id="sentimentScore">Fetching market data...</div>
+                    <div class="sentiment-source" id="sentimentSource"></div>
                 </div>
             </div>
 

@@ -101,10 +101,26 @@ async function fetchMarketSentiment() {
  * Display market sentiment
  */
 function displayMarketSentiment(data) {
-    const emoji = data.rating.includes('Extreme Greed') ? '🤑' :
-                  data.rating.includes('Greed') ? '😁' :
-                  data.rating.includes('Neutral') ? '😐' :
-                  data.rating.includes('Fear') && data.rating.includes('Extreme') ? '😱' : '😨';
+    // Cyberpunk icons instead of emojis
+    let icon = '';
+    let iconColor = '';
+
+    if (data.rating.includes('Extreme Greed')) {
+        icon = '<i class="fa-solid fa-rocket"></i>';
+        iconColor = '#00ff87';
+    } else if (data.rating.includes('Greed')) {
+        icon = '<i class="fa-solid fa-arrow-trend-up"></i>';
+        iconColor = '#00ff87';
+    } else if (data.rating.includes('Neutral')) {
+        icon = '<i class="fa-solid fa-equals"></i>';
+        iconColor = '#ffaa00';
+    } else if (data.rating.includes('Extreme Fear')) {
+        icon = '<i class="fa-solid fa-skull-crossbones"></i>';
+        iconColor = '#ff4444';
+    } else {
+        icon = '<i class="fa-solid fa-arrow-trend-down"></i>';
+        iconColor = '#ff4444';
+    }
 
     const color = data.rating.includes('Greed') ? '#00ff87' :
                   data.rating.includes('Neutral') ? '#ffaa00' : '#ff4444';
@@ -119,15 +135,24 @@ function displayMarketSentiment(data) {
         trendEmoji = '<i class="fa-solid fa-arrow-trend-down"></i>';
         trendDisplay = 'Fear Rising';
     } else {
-        trendEmoji = '<i class="fa-solid fa-arrow-right"></i>';
+        trendEmoji = '<i class="fa-solid fa-arrows-left-right"></i>';
         trendDisplay = 'Stable';
     }
 
-    document.getElementById('sentimentEmoji').innerHTML = emoji;
+    // Update with icon and matching color
+    const emojiElement = document.getElementById('sentimentEmoji');
+    emojiElement.innerHTML = icon;
+    emojiElement.style.color = iconColor;
+    emojiElement.style.filter = `drop-shadow(0 0 20px ${iconColor})`;
+
     document.getElementById('sentimentRating').textContent = data.rating;
     document.getElementById('sentimentRating').style.color = color;
     document.getElementById('sentimentScore').textContent = `Score: ${data.score}/100 • VIX: ${data.vix.toFixed(2)}`;
-    document.getElementById('sentimentSource').innerHTML = `${data.source} • ${trendEmoji} ${trendDisplay}`;
+    document.getElementById('sentimentSource').innerHTML = `
+        <span>${data.source}</span>
+        <span style="opacity: 0.4;">|</span>
+        <span>${trendEmoji} ${trendDisplay}</span>
+    `;
 }
 
 /**
@@ -631,13 +656,13 @@ function displayActionPlan(scores, stock) {
                 <strong>${actionText}</strong>
             </div>
             <div style="margin-bottom: 10px;">
-                <strong>${percentage < 40 ? 'Buy Entry:' : 'Entry Price:'}</strong> ${entryPrice}
+                <strong>${percentage < 40 ? 'Buy Entry:' : 'Entry Price'}:</strong> ${entryPrice}
             </div>
             <div style="margin-bottom: 10px;">
-                <strong>${percentage < 40 ? 'Recommendation:' : 'Stop Loss:'}</strong> ${stopLoss}
+                <strong>${percentage < 40 ? 'Recommendation:' : 'Stop Loss'}:</strong> ${stopLoss}
             </div>
             <div style="margin-bottom: 10px;">
-                <strong>${percentage < 40 ? 'Future Entry:' : 'Target:'}</strong> ${target}
+                <strong>${percentage < 40 ? 'Future Entry:' : 'Target'}:</strong> ${target}
             </div>
             ${waveInfo}
         </div>
