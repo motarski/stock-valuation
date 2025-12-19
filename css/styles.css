@@ -934,10 +934,10 @@ small {
 .sentiment-card {
     background: linear-gradient(135deg, var(--bg-secondary) 0%, rgba(139, 92, 246, 0.05) 100%);
     border: 2px solid transparent;
-    border-radius: 20px;
-    padding: 24px 32px;
+    border-radius: 16px;
+    padding: 18px 24px;
     width: 100%;
-    max-width: 480px;
+    max-width: 440px;
     margin-bottom: 0;
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5), 0 0 0 1px var(--border-color);
     position: relative;
@@ -984,18 +984,18 @@ small {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 12px;
-    margin-bottom: 24px;
+    gap: 10px;
+    margin-bottom: 16px;
 }
 
 .sentiment-header i {
-    font-size: 1.5em;
+    font-size: 1.3em;
     color: var(--accent-secondary);
     filter: drop-shadow(0 0 15px rgba(139, 92, 246, 0.6));
 }
 
 .sentiment-header h3 {
-    font-size: 1.2em;
+    font-size: 1.1em;
     margin: 0;
     font-weight: 600;
     letter-spacing: 0.5px;
@@ -1012,8 +1012,8 @@ small {
 }
 
 .sentiment-emoji {
-    font-size: 2.8em;
-    margin-bottom: 12px;
+    font-size: 2.2em;
+    margin-bottom: 8px;
     display: block;
     animation: emojiFloat 3s ease-in-out infinite;
 }
@@ -1028,17 +1028,17 @@ small {
 }
 
 .sentiment-rating {
-    font-size: 2em;
+    font-size: 1.6em;
     font-weight: 800;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
     letter-spacing: 0.5px;
     text-shadow: 0 0 30px currentColor;
 }
 
 .sentiment-score {
-    font-size: 1em;
+    font-size: 0.9em;
     opacity: 0.9;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
     font-weight: 500;
 }
 
@@ -1058,19 +1058,39 @@ small {
 /* Mobile responsive for sentiment card */
 @media (max-width: 480px) {
     .sentiment-card {
-        padding: 28px 24px;
+        padding: 16px 20px;
+        max-width: 100%;
+    }
+
+    .sentiment-header {
+        margin-bottom: 12px;
+    }
+
+    .sentiment-header h3 {
+        font-size: 1em;
+    }
+
+    .sentiment-header i {
+        font-size: 1.1em;
     }
 
     .sentiment-emoji {
-        font-size: 2.5em;
+        font-size: 1.8em;
+        margin-bottom: 6px;
     }
 
     .sentiment-rating {
-        font-size: 2em;
+        font-size: 1.4em;
+        margin-bottom: 4px;
     }
 
     .sentiment-score {
-        font-size: 1em;
+        font-size: 0.85em;
+        margin-bottom: 4px;
+    }
+
+    .sentiment-source {
+        font-size: 0.75em;
     }
 
     .sentiment-source {

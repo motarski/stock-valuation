@@ -172,23 +172,54 @@ function initTradingViewChart(ticker, exchange = '') {
     const container = document.getElementById('tradingview_chart');
     container.innerHTML = '';
 
-    // Map common exchanges
+    // Map common exchanges to TradingView format
     const exchangeMap = {
-        'ST': 'OMXSTO',  // Stockholm
-        'DE': 'XETRA',   // Germany
-        'L': 'LSE',      // London
-        'PA': 'EURONEXT' // Paris
+        // Nordic exchanges
+        'ST': 'OMXSTO',       // Stockholm
+        'STO': 'OMXSTO',      // Stockholm alternative
+        'HE': 'OMXHEX',       // Helsinki
+        'CO': 'OMXCOP',       // Copenhagen
+
+        // European exchanges
+        'DE': 'XETRA',        // Germany
+        'F': 'FSE',           // Frankfurt
+        'L': 'LSE',           // London
+        'PA': 'EURONEXT',     // Paris
+        'AS': 'EURONEXT',     // Amsterdam
+
+        // US exchanges (from yfinance API)
+        'NYQ': 'NYSE',        // NYSE
+        'NMS': 'NASDAQ',      // NASDAQ
+        'NGM': 'NASDAQ',      // NASDAQ Global Market
+        'NAS': 'NASDAQ',      // NASDAQ alternative
+        'PCX': 'ARCA',        // NYSE Arca
+        'ASE': 'AMEX',        // American Stock Exchange
+
+        // Other major exchanges
+        'TO': 'TSX',          // Toronto
+        'V': 'TSX',           // TSX Venture
+        'AX': 'ASX',          // Australian
+        'T': 'TSE',           // Tokyo
+        'HK': 'HKEX'          // Hong Kong
     };
 
+    // Clean ticker by removing exchange suffix if present
+    const cleanTicker = ticker.replace(/\.[A-Z]+$/, '');
+
     // Determine symbol format for TradingView
-    let symbol = ticker;
-    if (exchange) {
-        const tvExchange = exchangeMap[exchange] || exchange;
-        symbol = `${tvExchange}:${ticker.replace(`.${exchange}`, '')}`;
+    let symbol;
+    if (exchange && exchangeMap[exchange]) {
+        // Use mapped exchange
+        symbol = `${exchangeMap[exchange]}:${cleanTicker}`;
+    } else if (exchange) {
+        // Use exchange as-is if not in map
+        symbol = `${exchange}:${cleanTicker}`;
     } else {
-        // Default to NASDAQ for US stocks
-        symbol = `NASDAQ:${ticker}`;
+        // No exchange provided - just use ticker and let TradingView figure it out
+        symbol = cleanTicker;
     }
+
+    console.log(`TradingView Chart - Ticker: ${ticker}, Exchange: ${exchange}, Symbol: ${symbol}`);
 
     // Create new widget with cyberpunk theme
     tradingViewWidget = new TradingView.widget({
@@ -262,9 +293,16 @@ async function analyzeStock() {
         stockData = json.data;
         technicalData = json.data.technical;
 
-        // Extract exchange from ticker (e.g., KAMBI.ST -> ST)
-        const exchangeMatch = ticker.match(/\.([A-Z]+)$/);
-        const exchange = exchangeMatch ? exchangeMatch[1] : '';
+        // Get exchange from API response or extract from ticker
+        let exchange = stockData.exchange || '';
+
+        // If no exchange from API, try to extract from ticker (e.g., KAMBI.ST -> ST)
+        if (!exchange) {
+            const exchangeMatch = ticker.match(/\.([A-Z]+)$/);
+            exchange = exchangeMatch ? exchangeMatch[1] : '';
+        }
+
+        console.log(`Ticker: ${ticker}, Exchange from API: ${stockData.exchange}, Final exchange: ${exchange}`);
 
         // Initialize TradingView chart
         initTradingViewChart(ticker, exchange);
